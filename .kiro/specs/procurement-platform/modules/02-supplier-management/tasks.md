@@ -377,10 +377,13 @@
   - ✅ `npm run build`（vue-tsc -b + vite build）**通过，EXIT=0**（仅 ant-design-vue vendor chunk >500kB 的既有体积告警，非错误）。Phase 11-15 全部完成。
 
 - [ ] 17. 集成与端到端验证
-  - [ ] 17.1 实现共享常量与异常处理
+  - [x] 17.1 实现共享常量与异常处理
     - `SupplierConstants`（编号前缀、文件白名单、提醒节点）
     - 自定义异常：`SupplierNotFoundException`、`InvalidSupplierStatusException`、`DuplicatePendingChangeException`、`PrimaryContactRequiredException`、`InvalidCertificateFileException`，接入 `GlobalExceptionHandler`
     - _需求: 3.6, 6.5, 7, 9.5, 10.6_
+    - ✅ `SupplierConstants`（`CODE_PREFIX="VD"` + `CERT_EXPIRY_REMINDER_NODES`）；`SupplierCodeGenerator`/`CertExpiryDomainService` 改引常量。文件白名单按设计已外置为 `OssProperties`（config），不重复声明（避免双源）。5 个供应商异常接入 `GlobalExceptionHandler.resolveHttpStatus`：SUPPLIER_NOT_FOUND→404、INVALID_SUPPLIER_STATUS/DUPLICATE_PENDING_CHANGE/PRIMARY_CONTACT_REQUIRED→409、INVALID_CERTIFICATE_FILE→400。已 TDD（5 用例 `GlobalExceptionHandlerSupplierStatusTests`）。`mvn clean test` 191 全绿。
+
+  > 17.2/17.3/17.4 待外部依赖与运行环境：17.2 真实 COS（加 `cos_api` SDK + bucket）与模块01 账号开通联动；17.3 前后端联调；17.4* E2E。
 
   - [ ] 17.2 跨模块集成联调
     - 账号创建/停用/启用与模块 01 联动、供应商首登状态流转、模块 04 合作中供应商列表

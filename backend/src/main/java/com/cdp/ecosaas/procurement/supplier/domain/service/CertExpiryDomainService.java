@@ -1,5 +1,7 @@
 package com.cdp.ecosaas.procurement.supplier.domain.service;
 
+import com.cdp.ecosaas.procurement.supplier.shared.constants.SupplierConstants;
+
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
@@ -10,9 +12,9 @@ import java.time.temporal.ChronoUnit;
 public class CertExpiryDomainService {
 
     /**
-     * 提醒节点（距截止日的天数）：30/15/7/3/0。后续可迁移至 {@code SupplierConstants}（任务 17.1）。
+     * 提醒节点（距截止日的天数）：30/15/7/3/0，来源 {@link SupplierConstants#CERT_EXPIRY_REMINDER_NODES}（任务 17.1）。
      */
-    public static final int[] REMINDER_NODES = {30, 15, 7, 3, 0};
+    public static final int[] REMINDER_NODES = SupplierConstants.CERT_EXPIRY_REMINDER_NODES;
 
     /**
      * 距到期的剩余天数（{@code validTo - today}），已过期为负数。

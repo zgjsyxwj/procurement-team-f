@@ -48,6 +48,13 @@ public class GlobalExceptionHandler {
     private static final String MSG_SUPER_ADMIN_IMMUTABLE = "SUPER_ADMIN_IMMUTABLE";
     private static final String MSG_CSRF_TOKEN_MISMATCH = "CSRF_TOKEN_MISMATCH";
 
+    // 供应商模块（模块02，任务 17.1）
+    private static final String MSG_SUPPLIER_NOT_FOUND = "SUPPLIER_NOT_FOUND";
+    private static final String MSG_INVALID_SUPPLIER_STATUS = "INVALID_SUPPLIER_STATUS";
+    private static final String MSG_DUPLICATE_PENDING_CHANGE = "DUPLICATE_PENDING_CHANGE";
+    private static final String MSG_PRIMARY_CONTACT_REQUIRED = "PRIMARY_CONTACT_REQUIRED";
+    private static final String MSG_INVALID_CERTIFICATE_FILE = "INVALID_CERTIFICATE_FILE";
+
     private static final String CODE_BAD_REQUEST = "COMMON.1000";
     private static final String MSG_BAD_REQUEST = "BAD_REQUEST";
     private static final String CODE_CONFLICT = "COMMON.1002";
@@ -116,12 +123,13 @@ public class GlobalExceptionHandler {
                     -> HttpStatus.UNAUTHORIZED;
             case MSG_ACCOUNT_LOCKED -> HttpStatus.LOCKED;
             case MSG_ACCOUNT_DISABLED, MSG_FORBIDDEN -> HttpStatus.FORBIDDEN;
-            case MSG_RESOURCE_NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case MSG_RESOURCE_NOT_FOUND, MSG_SUPPLIER_NOT_FOUND -> HttpStatus.NOT_FOUND;
             case MSG_PASSWORD_POLICY_VIOLATION, MSG_PASSWORD_HISTORY_VIOLATION,
-                 MSG_UNSUPPORTED_USER_TYPE, MSG_BAD_REQUEST
+                 MSG_UNSUPPORTED_USER_TYPE, MSG_BAD_REQUEST, MSG_INVALID_CERTIFICATE_FILE
                     -> HttpStatus.BAD_REQUEST;
             case MSG_PHONE_ALREADY_USED, MSG_EMAIL_ALREADY_USED, MSG_SUPER_ADMIN_IMMUTABLE,
-                 MSG_CONFLICT
+                 MSG_CONFLICT, MSG_INVALID_SUPPLIER_STATUS, MSG_DUPLICATE_PENDING_CHANGE,
+                 MSG_PRIMARY_CONTACT_REQUIRED
                     -> HttpStatus.CONFLICT;
             default -> HttpStatus.BAD_REQUEST;
         };

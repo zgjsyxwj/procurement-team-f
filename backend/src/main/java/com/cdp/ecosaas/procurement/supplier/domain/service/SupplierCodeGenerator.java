@@ -1,5 +1,7 @@
 package com.cdp.ecosaas.procurement.supplier.domain.service;
 
+import com.cdp.ecosaas.procurement.supplier.shared.constants.SupplierConstants;
+
 /**
  * 供应商编号生成器 —— 规则 VD + 4 位自增序号（Req 6.2）。
  * <p>
@@ -8,7 +10,7 @@ package com.cdp.ecosaas.procurement.supplier.domain.service;
  */
 public class SupplierCodeGenerator {
 
-    private static final String PREFIX = "VD";
+    private static final String PREFIX = SupplierConstants.CODE_PREFIX;
 
     /**
      * 生成供应商编号：{@code VD} + 至少 4 位零填充序号（序号超过 9999 时自然扩展位数）。
