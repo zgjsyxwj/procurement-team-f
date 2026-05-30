@@ -18,7 +18,7 @@ import java.util.List;
  * 纯领域模型，不含 JPA 注解或 Spring 依赖；审计字段（createdAt 等）与乐观锁版本由持久化层承载。
  */
 @Getter
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @NoArgsConstructor
 public class Supplier {

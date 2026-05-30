@@ -160,21 +160,26 @@
   - 确保所有测试通过，如有疑问请向用户确认。
 
 - [ ] 8. 应用层 - 命令与查询
-  - [ ] 8.1 实现供应商创建与邀请 Command 与 Handler
+  - [x] 8.1 实现供应商创建与邀请 Command 与 Handler
     - `CreateSupplierCommand`、`InviteSupplierCommand`
     - `SupplierCommandHandler`：生成编号 → 保存供应商+主要联系人 → 建号 → 建管理关系 → （保存并邀请时）发邀请邮件+邀请日志+状态流转
     - 校验手机号/邮箱格式，手机号不可重复创建供应商账号
     - _需求: 6.1-6.8, 6.9_
+    - ✅ 创建 + 创建时邀请 已 TDD（4 用例）：编号→存供应商(创建成功)+主要联系人→建号(端口,返初始密码)→建关系(source=CREATED)→（邀请时）邮件+邀请日志(SUCCESS/FAILURE)+流转「待进入」；手机号/邮箱格式校验（宽松正则，兼容国外）。新增邀请日志持久化栈（model/repo/dao/jpa 内联映射）。手机号唯一由模块01 createAccount 在 17.2 接通时强制。
+    - ⏸ 独立 `InviteSupplierCommand`「重发邀请」按决策暂缓（初始密码只存哈希、明文未留存，`SupplierAccountPort` 无重置口子）。
 
-  - [ ] 8.2 实现信息编辑与变更审核 Command 与 Handler
+  - [x] 8.2 实现信息编辑与变更审核 Command 与 Handler
     - `UpdateSupplierInfoCommand`（采购员直接编辑→即时生效+记录变更）
     - `SubmitSupplierChangeCommand`（供应商提交→待审核）、`WithdrawChangeCommand`、`SubmitForReviewCommand`（提交准入审核）、`ReviewChangeCommand`（通过/驳回）
     - `SupplierChangeCommandHandler`：区分入驻草稿与合作中变更两种模式
     - _需求: 3.3, 3.6, 3.7, 4.4, 5.3-5.7, 49.1-49.4_
+    - ✅ BASIC_INFO 全套已 TDD（8 用例）：采购员直接编辑(即时生效+已通过记录)、供应商提交(待完善→草稿直接生效 / 合作中→待审核+同类冲突)、撤回、提交准入审核、审核通过(重建应用)/驳回(通知主要联系人)。新增 `SupplierBasicInfoFields` 字段注册表、`Supplier @Builder(toBuilder=true)`、`SupplierNotFoundException`。
+    - ⏸ BANK 银行多值变更按决策随后做；合作中提交时「通知关联采购员」(Req 3.4) 暂缓（缺采购员ID→邮箱解析端口，当前仅记日志）。
 
-  - [ ] 8.3* 编写变更与审核 Handler 单元测试
+  - [x] 8.3* 编写变更与审核 Handler 单元测试
     - 测试供应商提交待审核、同类冲突、撤回、采购员直接编辑即时生效、审核通过/驳回
     - _需求: 3.3, 3.6, 3.7, 5.3, 5.4, 49.2_
+    - ✅ 由 `SupplierChangeCommandHandlerTests`（8 用例）覆盖（随 8.2 一并完成）。
 
   - [ ] 8.4 实现供应商状态管理 Command 与 Handler
     - `ChangeSupplierStatusCommand`：状态机流转 + 同步账号停用/启用 + 记录操作备注
