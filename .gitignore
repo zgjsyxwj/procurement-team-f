@@ -1,0 +1,112 @@
+# ===========================
+# OS generated files
+# ===========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ===========================
+# IDE and Editor
+# ===========================
+.idea/
+*.iml
+*.iws
+*.ipr
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# ===========================
+# Backend - Java / Spring Boot / Maven
+# ===========================
+backend/target/
+backend/*.jar
+backend/*.war
+backend/*.class
+
+# Maven wrapper
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# Log files
+backend/*.log
+backend/logs/
+
+# Spring Boot
+backend/*.pid
+
+# ===========================
+# Frontend - Vue / Vite / Node.js
+# ===========================
+frontend/node_modules/
+frontend/dist/
+frontend/.output/
+frontend/.nuxt/
+
+# Vite
+frontend/*.local
+
+# Environment files
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# Logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+
+# Editor directories and files
+frontend/*.suo
+frontend/*.ntvs*
+frontend/*.njsproj
+frontend/*.sln
+frontend/*.sw?
+
+# Test coverage
+frontend/coverage/
+
+# TypeScript cache
+frontend/*.tsbuildinfo
+
+# ===========================
+# General
+# ===========================
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Log files
+*.log
+logs/
+
+# Package manager lock files (keep pnpm-lock.yaml)
+frontend/package-lock.json
+frontend/yarn.lock
+
+# Dependency directories
+node_modules/
+
+# Build output
+dist/
+build/
+target/
+
+# Test & coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# Temp files
+tmp/
+temp/
+*.tmp

@@ -1,0 +1,132 @@
+server:
+    port: 9000
+    servlet:
+        multipart:
+            max-file-size: 100MB
+            max-request-size: 100MB
+            enabled: true
+    main:
+        allow-circular-references: true
+management:
+    server:
+        port: 9001
+    health:
+        redis:
+            enabled: false
+        elasticsearch:
+            enabled: false
+    endpoints:
+        web:
+            base-path: /management
+
+spring:
+    datasource:
+        type: com.alibaba.druid.pool.DruidDataSource
+        druid:
+            initial-size: 5
+            min-idel: 5
+            max-active: 20
+            max-wait: 60000 # unit: ms
+            time-between-eviction-runs-millis: 60000
+            min-evictable-idle-time-millis: 300000
+            validation-query: SELECT 1
+            test-while-idle: true
+            test-on-borrow: false
+            test-on-return: false
+            filter:
+                stat:
+                    enabled: true
+                    log-slow-sql: true
+                    slow-sql-millis: 30000
+                wall:
+                    enabled: true
+                    config:
+                        delete-where-alway-true-check: true
+                        update-where-alway-true-check: true
+            stat-view-servlet:
+                enabled: true
+                url-pattern: /druid/*
+                login-username: admin
+                login-password: Init1234!
+                reset-enable: false
+            web-stat-filter:
+                enabled: true
+                url-pattern: /*
+                exclusions: '*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*'
+    jpa:
+        database: POSTGRESQL
+        database-platform: org.hibernate.dialect.PostgreSQLDialect
+        hibernate:
+            ddl-auto: none # default safe; dev profile may override to 'update'
+        properties:
+            hibernate:
+                format_sql: true
+    messages:
+        basename: i18n/messages
+        encoding: UTF-8
+        fallback-to-system-locale: true
+        cache-duration: 3600
+        use-code-as-default-message: false
+    mail:
+        # SMTP host/port/credentials per environment (overridden in application-{dev,test,prod}.yml).
+        host: smtp.example.com
+        port: 587
+        username: ""
+        password: ""
+        properties:
+            mail:
+                smtp:
+                    auth: true
+                    starttls:
+                        enable: true
+                        required: true
+                    connectiontimeout: 5000
+                    timeout: 5000
+                    writetimeout: 5000
+
+# ===================================================================
+# Authentication module configuration
+# All values externalized; see backend_spec §12.3.
+# Per-environment overrides live in application-{dev,test,prod}.yml.
+# ===================================================================
+auth:
+    jwt:
+        # WARNING: secret-key MUST be overridden in each environment via Apollo / K8s Secret.
+        secret-key: "PLACEHOLDER-OVERRIDE-IN-ENV-CONFIG-AT-LEAST-32-CHARS"
+        expiration: 30m
+    saml:
+        entity-id: "ecosaas-procurement"
+        idp-metadata-url: "https://worklife.example.com/saml/metadata"
+        acs-url: "http://localhost:9000/api/internal/auth/sso/callback"
+    lockout:
+        max-failed-attempts: 5
+        lock-duration: 30m
+    cookie:
+        jwt-name: jwt
+        jwt-path: /api
+        csrf-cookie-name: XSRF-TOKEN
+        csrf-header-name: X-CSRF-TOKEN
+        csrf-path: /
+        max-age: 30m
+        secure: true
+        same-site: Lax
+    password:
+        min-length: 8
+        generated-min-length: 12
+        generated-max-length: 16
+        history-count: 5
+        reset-token-expiry: 30m
+        reset-base-url: "http://localhost:5173/reset-password"
+    cors:
+        allowed-origins:
+            - "http://localhost:5173"
+        allowed-methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+        allowed-headers: [Content-Type, X-CSRF-TOKEN]
+        allow-credentials: true
+    mail:
+        from: "no-reply@ecosaas.com"
+        from-name: "CDP 采购平台"
+        # When false, EmailServiceAdapter only logs (dev/test default).
+        enabled: false
+        connection-timeout: 5s
+        read-timeout: 5s

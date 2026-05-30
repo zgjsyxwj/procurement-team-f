@@ -1,0 +1,19 @@
+# ===================================================================
+# Spring Cloud Config bootstrap configuration for the "dev" profile
+# In prod profile, properties will be overwritten by the ones defined in bootstrap-prod.yml
+# ===================================================================
+spring:
+  application:
+    name: EcoSaaSProcurement
+  profiles:
+    active: dev
+    include: apollo #springconfig|apollo 是用springconfig还是apollo
+cdp:
+  apollo:
+    dev: http://apollo-dev.ecosaas.com
+    test: http://apollo-test.ecosaas.com
+    test3: http://apollo-test3.ecosaas.com
+    release: http://apollo-release.ecosaas.com
+    uat: http://apollo-uat.ecosaas.com
+    stg: http://10.75.2.158:8080
+    prod: http://10.75.10.192:8080,http://10.75.10.193:8080

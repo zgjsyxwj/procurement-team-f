@@ -1,0 +1,29 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Run Backend",
+            "request": "launch",
+            "mainClass": "com.cdp.ecosaas.procurement.ProcurementApplication",
+            "projectName": "ecosaas-procurement",
+            "args": "",
+            "vmArgs": "-Denv=DEV"
+        },
+        {
+            "type": "java",
+            "name": "Debug Backend",
+            "request": "launch",
+            "mainClass": "com.cdp.ecosaas.procurement.ProcurementApplication",
+            "projectName": "ecosaas-procurement",
+            "args": "",
+            "vmArgs": "-Denv=DEV -Xdebug"
+        },
+        {
+            "type": "java",
+            "name": "Current Java File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+    ]
+}

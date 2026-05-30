@@ -1,0 +1,45 @@
+# ===================================================================
+# Prod profile - production overrides
+# Sensitive values MUST be supplied via Apollo / K8s Secret, never committed here.
+# ===================================================================
+logging:
+  level:
+    com.ctrip.framework.apollo: WARN
+    root: INFO
+
+spring:
+    datasource:
+        url: ${DB_URL}
+        username: ${DB_USERNAME}
+        password: ${DB_PASSWORD}
+        driver-class-name: org.postgresql.Driver
+    jpa:
+        show-sql: false
+        hibernate:
+            ddl-auto: none
+    mail:
+        host: ${MAIL_HOST}
+        port: ${MAIL_PORT:587}
+        username: ${MAIL_USERNAME}
+        password: ${MAIL_PASSWORD}
+
+auth:
+    jwt:
+        # Provided exclusively via Apollo Secret / K8s Secret. NEVER hardcode.
+        secret-key: ${AUTH_JWT_SECRET}
+    cookie:
+        secure: true
+        same-site: Lax
+    cors:
+        allowed-origins:
+            - "https://procurement.ecosaas.com"
+    password:
+        reset-base-url: "https://procurement.ecosaas.com/reset-password"
+    saml:
+        entity-id: ${AUTH_SAML_ENTITY_ID}
+        idp-metadata-url: ${AUTH_SAML_IDP_METADATA_URL}
+        acs-url: ${AUTH_SAML_ACS_URL}
+    mail:
+        from: ${MAIL_FROM}
+        from-name: "CDP 采购平台"
+        enabled: true

@@ -1,0 +1,4 @@
+/**
+ * 合同管理 - 领域服务：跨实体的核心业务规则
+ */
+package com.cdp.ecosaas.procurement.contract.domain.service;

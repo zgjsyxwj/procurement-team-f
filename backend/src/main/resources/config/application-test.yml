@@ -1,0 +1,41 @@
+# ===================================================================
+# Test profile - integration test environment overrides
+# ===================================================================
+logging:
+  level:
+    com.ctrip.framework.apollo: INFO
+
+spring:
+    datasource:
+        url: jdbc:postgresql://test-db.internal:5432/trial_procurement?currentSchema=public
+        username: ${DB_USERNAME:trial_test}
+        password: ${DB_PASSWORD:}
+        driver-class-name: org.postgresql.Driver
+    jpa:
+        show-sql: false
+        hibernate:
+            ddl-auto: validate
+    mail:
+        host: ${MAIL_HOST:smtp.test.ecosaas.com}
+        port: ${MAIL_PORT:587}
+        username: ${MAIL_USERNAME:}
+        password: ${MAIL_PASSWORD:}
+
+auth:
+    jwt:
+        secret-key: ${AUTH_JWT_SECRET:test-secret-key-for-jwt-signing-minimum-32-chars}
+    cookie:
+        secure: true
+    cors:
+        allowed-origins:
+            - "https://procurement-test.ecosaas.com"
+    password:
+        reset-base-url: "https://procurement-test.ecosaas.com/reset-password"
+    saml:
+        entity-id: "ecosaas-procurement-test"
+        idp-metadata-url: "https://worklife-test.example.com/saml/metadata"
+        acs-url: "https://procurement-test.ecosaas.com/api/internal/auth/sso/callback"
+    mail:
+        from: "no-reply-test@ecosaas.com"
+        from-name: "CDP 采购平台 (TEST)"
+        enabled: true

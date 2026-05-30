@@ -1,0 +1,46 @@
+app:
+  id: ${spring.application.name}
+apollo:
+  cluster: default
+  property:
+    order:
+      enable: true
+  bootstrap:
+    enabled: true #打开apollo
+    namespaces: "application,common"
+spring:
+  config.activate.on-profile: apollo
+  cloud:
+    config:
+      enabled: false #关闭config
+---
+apollo:
+  meta: ${cdp.apollo.dev}
+spring:
+  config.activate.on-profile: dev
+---
+apollo:
+  meta: ${cdp.apollo.test}
+spring:
+  config.activate.on-profile: test
+---
+apollo:
+  meta: ${cdp.apollo.release}
+spring:
+  config.activate.on-profile: release
+---
+apollo:
+  meta: ${cdp.apollo.uat}
+spring:
+  config.activate.on-profile: uat
+---
+apollo:
+  meta: ${cdp.apollo.stg}
+spring:
+  config.activate.on-profile: stg
+---
+apollo:
+  meta: ${cdp.apollo.prod}
+spring:
+  config.activate.on-profile: prod
+---

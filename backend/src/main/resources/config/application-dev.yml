@@ -1,0 +1,52 @@
+# ===================================================================
+# Dev profile - local development overrides
+# ===================================================================
+logging:
+  level:
+    com.ctrip.framework.apollo: DEBUG
+
+spring:
+    datasource:
+        url: jdbc:postgresql://10.76.3.249:5433/caigou?currentSchema=caigou7
+        username: caigou6_user
+        password: 123456
+        driver-class-name: org.postgresql.Driver
+    jpa:
+        show-sql: true
+        hibernate:
+            ddl-auto: update
+    # In dev, use a local SMTP relay (e.g. Mailpit / MailHog) or leave disabled.
+    mail:
+        host: smtpdm.aliyun.com
+        port: 465
+        username: devadmin@dev.ecosaas.com
+        password: JzZClqo73PRtv
+        properties:
+            mail:
+                smtp:
+                    auth: false
+                    starttls:
+                        enable: false
+                        required: false
+
+auth:
+    jwt:
+        secret-key: "dev-secret-key-for-jwt-signing-minimum-32-characters-do-not-use-in-prod"
+    cookie:
+        # Local dev runs on plain HTTP; disable Secure flag so cookies are accepted.
+        secure: false
+    cors:
+        allowed-origins:
+            - "http://localhost:3000"
+            - "http://localhost:5173"
+    password:
+        reset-base-url: "http://localhost:5173/reset-password"
+    saml:
+        entity-id: "ecosaas-procurement-dev"
+        idp-metadata-url: "https://worklife-dev.example.com/saml/metadata"
+        acs-url: "http://localhost:9000/api/internal/auth/sso/callback"
+    mail:
+        from: "devadmin@dev.ecosaas.com"
+        from-name: "CDP 采购平台 (DEV)"
+        # Disabled by default; flip to true once a local SMTP relay is configured.
+        enabled: true
