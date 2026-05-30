@@ -53,6 +53,11 @@ const adminMenu: MenuItem[] = [
     icon: h(TeamOutlined),
   },
   {
+    key: '/supplier-changes',
+    label: '供应商审核',
+    icon: h(AuditOutlined),
+  },
+  {
     key: '/approval',
     label: '审批中心',
     icon: h(CheckCircleOutlined),
@@ -88,6 +93,7 @@ const adminMenu: MenuItem[] = [
     icon: h(SettingOutlined),
     children: [
       { key: '/admin/users', label: '采购员账号' },
+      { key: '/admin/cert-types', label: '证件类型字典' },
       { key: '/settings/fields', label: '字段设置' },
       { key: '/settings/forms', label: '表单设置' },
       { key: '/admin/audit-logs', label: '审计日志' },
@@ -111,6 +117,11 @@ const buyerMenu: MenuItem[] = [
     key: '/suppliers',
     label: '供应商管理',
     icon: h(TeamOutlined),
+  },
+  {
+    key: '/supplier-changes',
+    label: '供应商审核',
+    icon: h(AuditOutlined),
   },
   {
     key: '/approval',

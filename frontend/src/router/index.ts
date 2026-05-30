@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { authRoutes, createAuthGuard, setupSessionTimeoutInterceptor } from '../modules/auth/presentation/routes/auth.routes';
+import { supplierRoutes } from '../modules/supplier/presentation/routes/supplier.routes';
 
 const PlaceholderView = () => import('../views/placeholder/PlaceholderView.vue');
 
@@ -26,24 +27,8 @@ const routes = [
       },
 
       // ==================== 供应商管理（模块02） ====================
-      {
-        path: 'suppliers',
-        name: 'SupplierList',
-        component: PlaceholderView,
-        meta: { title: '供应商列表', subtitle: '查看和管理供应商信息', module: '供应商管理', roles: ['ADMIN', 'BUYER'] },
-      },
-      {
-        path: 'suppliers/create',
-        name: 'SupplierCreate',
-        component: PlaceholderView,
-        meta: { title: '创建供应商', subtitle: '填写供应商基础信息并发送邀请', module: '供应商管理', roles: ['ADMIN', 'BUYER'] },
-      },
-      {
-        path: 'suppliers/:id',
-        name: 'SupplierDetail',
-        component: PlaceholderView,
-        meta: { title: '供应商详情', subtitle: '查看供应商企业信息、联系人和证件', module: '供应商管理', roles: ['ADMIN', 'BUYER'] },
-      },
+      // 采购端列表/创建/详情、变更审核中心、证件类型字典、供应商端企业信息/联系人
+      ...supplierRoutes,
 
       // ==================== 采购申请单（模块03） ====================
       {
@@ -204,19 +189,7 @@ const routes = [
         meta: { title: '邮件日志', subtitle: '查看系统邮件发送记录', module: '系统管理', roles: ['ADMIN', 'BUYER'] },
       },
 
-      // ==================== 供应商端 ====================
-      {
-        path: 'company-info',
-        name: 'CompanyInfo',
-        component: PlaceholderView,
-        meta: { title: '企业信息', subtitle: '维护企业基础信息、银行信息和证件', module: '供应商管理', roles: ['SUPPLIER'] },
-      },
-      {
-        path: 'contacts',
-        name: 'ContactManagement',
-        component: PlaceholderView,
-        meta: { title: '联系人管理', subtitle: '管理企业联系人信息', module: '供应商管理', roles: ['SUPPLIER'] },
-      },
+      // 供应商端路由（企业信息/联系人）已并入上方 supplierRoutes
     ],
   },
 
