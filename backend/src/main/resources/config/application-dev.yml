@@ -7,7 +7,7 @@ logging:
 
 spring:
     datasource:
-        url: jdbc:postgresql://10.76.3.249:5433/caigou?currentSchema=caigou7
+        url: jdbc:postgresql://10.76.3.249:5433/caigou?currentSchema=caigou6
         username: caigou6_user
         password: 123456
         driver-class-name: org.postgresql.Driver
