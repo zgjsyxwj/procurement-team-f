@@ -222,131 +222,159 @@
     - ✅ 用户拍板方案 A：新增跨模块契约事件 `shared/event/SupplierFirstLoginEvent(supplierId)`；模块 01 `AuthCommandHandler.handleSupplierLogin` 首登成功（authenticate 前捕获 `isFirstLogin`）后 `eventPublisher.publishEvent(...)`（additive，注入 `ApplicationEventPublisher`）；模块 02 `SupplierFirstLoginListener`（`@EventListener`+`@Transactional`，与登录同源事务）走 `lifecycleService.markFirstLogin` → 待完善信息，供应商缺失/已越过状态时安全跳过。已 TDD（监听器 3 用例 + 模块01 发事件 2 用例）。
 
 - [ ] 9. 接口层 - REST Controller
-  - [ ] 9.1 实现 DTO
+  - 角色门禁（用户拍板方案 A）：模块01 `SecurityConfig` 加路径规则——`/api/suppliers/**`、`/api/supplier-changes/**`、`/api/supplier-certificates/**` 限 BUYER/ADMIN；`/api/supplier/**` 限 SUPPLIER（登录接口已放行）；`/api/admin/**` 已限 ADMIN。供应商门户端 supplierId 由 `SupplierIdentityResolver` 经新增只读端口 `SupplierAccountPort.findSupplierIdByUserId`（`SupplierAccountAdapter` 查模块01 `SupplierUserRepository`，只读、不改模块01代码）解析。控制器为薄控制器（构建 Command/Query→handler→响应 DTO），未单测（无 @SpringBootTest 基座；核心逻辑已在 Phase 8 handler 层测过）。`mvn clean test` 186 全绿（编译校验）。
+  - [x] 9.1 实现 DTO
     - 供应商信息、创建、列表、联系人、证件、变更对比、审核、状态调整、证件类型等请求/响应 DTO
     - _需求: 3, 6, 8, 9, 10, 11, 50_
+    - ✅ `interfaces/dto/` 下 ~17 个 record（含 `from()`/`toDomain()` 映射）：Create/SupplierList/SupplierDetail/BankAccount/UpdateSupplierInfo/ChangeStatus/DisableImpact/ChangeField/ChangeRecord/Review/Contact/Certificate/CertType(+Field/Fields/Status)/ActiveSupplier。
 
-  - [ ] 9.2 实现 SupplierProfileController（供应商端）
+  - [x] 9.2 实现 SupplierProfileController（供应商端）
     - `GET/PUT /api/supplier/profile`、`POST /api/supplier/profile/submit-review`
     - `GET/POST /api/supplier/profile/pending-change(/withdraw)`、`GET /api/supplier/cert-types`
     - _需求: 3.1-3.10, 4.1-4.7_
+    - ✅ 全部端点就绪（仅 BASIC_INFO，BANK 多值延后）；GET profile 复用 SupplierDetailResponse；待审核变更经 `SupplierChangeQueryHandler.findPendingBySupplier`。
 
-  - [ ] 9.3 实现 SupplierContactController（双端）
+  - [x] 9.3 实现 SupplierContactController（双端）
     - 供应商端 `/api/supplier/contacts**`、采购端 `/api/suppliers/{id}/contacts**`、联系人邀请
     - _需求: 9.1-9.10_
+    - ✅ 双端增改/删/设主（采购端删除复用 handler）；列表经 `SupplierQueryHandler.listContacts`。⏸ 联系人邀请端点按决策跳过（邮件/日志，17.2）。
 
-  - [ ] 9.4 实现 SupplierCertificateController（双端）
+  - [x] 9.4 实现 SupplierCertificateController（双端）
     - 供应商端上传/列表、采购端列表/手动添加
     - _需求: 10.1-10.11_
+    - ✅ 多部分表单上传（供应商上传/采购员手动添加）、双端列表。⏸ 真实 COS 上传延后（端点已接 `FileStoragePort`，COS 接入前上传会失败）；差异化字段(extraFields)多部分解析暂传空。
 
-  - [ ] 9.5 实现 SupplierController（采购端）
+  - [x] 9.5 实现 SupplierController（采购端）
     - 列表、创建、详情、直接编辑、邀请、停用影响、状态调整、变更记录
     - _需求: 6, 7, 8, 49, 50_
+    - ✅ 列表（数据范围）、创建、详情、直接编辑、停用影响、状态调整、变更记录。⏸ 发送/重发邀请端点按决策跳过（独立重发邀请延后）。
 
-  - [ ] 9.6 实现 SupplierChangeReviewController（审核）
+  - [x] 9.6 实现 SupplierChangeReviewController（审核）
     - 变更待审核列表/详情/通过/驳回、证件审核通过/驳回
     - _需求: 5.1-5.7, 10.7, 10.8_
+    - ✅ `/api/supplier-changes` 列表/详情/approve/reject + `/api/supplier-certificates/{id}` approve/reject。
 
-  - [ ] 9.7 实现 CertificateTypeController（管理端）
+  - [x] 9.7 实现 CertificateTypeController（管理端）
     - 证件类型增删改查/停用、差异化字段维护
     - _需求: 11.1-11.6_
+    - ✅ `/api/admin/cert-types` 列表/新增/编辑/状态/字段；新增只读 `CertificateTypeQueryHandler`（findAll/findActive）。
 
-  - [ ] 9.8 实现 SupplierInternalController（模块集成）
+  - [x] 9.8 实现 SupplierInternalController（模块集成）
     - `GET /api/internal/suppliers/active`：合作中供应商列表（供模块 04）
     - _需求: 依赖关系_
+    - ✅ 返回 `ActiveSupplierResponse(id,code,name)`。
 
   - [ ] 9.9* 编写 Controller 集成测试
     - 测试创建/邀请、变更提交与审核、证件上传与审核、状态调整、权限与数据范围隔离
     - _需求: 5, 6, 7, 8, 10, 50_
+    - ⏸ 可选(*)测试：项目无 @SpringBootTest/MockMvc 基座，按「主要业务为重」跳过；核心逻辑已在 Phase 8 handler 层覆盖。
 
-- [x] 10. 检查点 - 后端应用层（Phase 8）完成
-  - ✅ `mvn clean test` **186 全绿**（Phase 8 应用层 8.1-8.9 全部完成）。Phase 9（REST Controller + DTO）尚未开始。
+- [x] 10. 检查点 - 后端完成
+  - ✅ `mvn clean test` **186 全绿**。后端 Phase 1-9 全部完成（领域/服务/持久化/外部适配器/应用层/接口层）。9.9* 集成测试按决策跳过（无 @SpringBootTest 基座）。剩余后端收尾在 Phase 17（共享常量/异常接入 GlobalExceptionHandler、跨模块联调、真实 COS/账号开通）。前端 Phase 11-16 待启动。
 
 - [ ] 11. 前端 - 基础设施与状态管理
-  - [ ] 11.1 实现前端类型定义
+  - [x] 11.1 实现前端类型定义
     - `supplier.dto.ts`、`contact.dto.ts`、`certificate.dto.ts`、`change.dto.ts`、`supplier-info.vo.ts`、command 类型
     - _需求: 3, 6, 8, 9, 10_
+    - ✅ `types/vo/supplier-info.vo.ts`（全部枚举 + 中文标签/颜色映射）、`types/dto/{supplier,contact,certificate,change}.dto.ts`、`types/command/{create-supplier,submit-change}.command.ts`。字段对齐 DDL + 后端 command/result（camelCase JSON）。
 
-  - [ ] 11.2 实现 service 层（API 调用）
+  - [x] 11.2 实现 service 层（API 调用）
     - `supplier.service.ts`、`supplier-change.service.ts`、`contact.service.ts`、`certificate.service.ts`、`cert-type.service.ts`
     - 复用 `shared/http` axios 实例与 CSRF 适配器
     - _需求: 3, 5, 6, 8, 9, 10, 11, 50_
+    - ✅ 5 个 service 全部走共享 `@/shared/http/api-client`（含 CSRF 拦截器），路径对齐 design REST 表。联系人/证件双端共用（供应商端 supplierId=null）。
 
-  - [ ] 11.3 实现 oss-upload.adapter.ts
+  - [x] 11.3 实现 oss-upload.adapter.ts
     - 证件文件上传（格式/大小前端预校验）
     - _需求: 10.1, 10.6_
+    - ✅ `validateCertificateFile`：扩展名 + MIME 双重校验（PDF/JPG/PNG）、≤100MB；实际上传由 certificate.service multipart 提交。
 
-  - [ ] 11.4 实现 supplier.store.ts（Pinia）
+  - [x] 11.4 实现 supplier.store.ts（Pinia）
     - 当前供应商信息、列表筛选状态、审核中心待办计数
     - _需求: 3.1, 8_
+    - ✅ `useSupplierStore`：myProfile（本企业信息）、listQuery（列表筛选）、pendingChangeCount（审核待办计数 refreshPendingCount）。
 
 - [ ] 12. 前端 - 领域与用例层
-  - [ ] 12.1 实现前端领域模型
+  - [x] 12.1 实现前端领域模型
     - `supplier.entity.ts`、`contact.entity.ts`、`certificate.entity.ts`、`supplier-status.vo.ts`、`bank-account.vo.ts`
     - 规则：`bank-account-validation.rule.ts`（填写则三项必填）、`contact-validation.rule.ts`（主要联系人约束）
     - _需求: 3.8, 3.9, 9.3-9.5_
+    - ✅ entities（supplier/contact/certificate，含 hasBankInfo / 到期派生 deriveExpiryStatus）、value-objects（supplier-status 派生判断、bank-account、basic-info-fields 字段元数据对齐后端注册表）、rules（银行三项联动、联系人格式 + 不可删唯一主要联系人）。
 
-  - [ ] 12.2 实现前端用例层
+  - [x] 12.2 实现前端用例层
     - manage-supplier-info、submit-info-change、create-supplier、manage-suppliers、review-change、manage-contacts、manage-certificates、manage-cert-types
     - _需求: 3, 5, 6, 7, 8, 9, 10, 11_
+    - ✅ 8 个 usecase 全部实现（校验 + service 调用 + 统一 `UseCaseResult`/`extractErrorMessage`）。`npx vue-tsc -b` 通过（Phase 11+12 基础设施类型校验全绿）。
 
 - [ ] 13. 前端 - 供应商端页面与组件
-  - [ ] 13.1 实现 SupplierProfileView（默认首页）
+  - [x] 13.1 实现 SupplierProfileView（默认首页）
     - 企业基本信息表单 + 银行信息（多组）+ 联系人 + 证件 一体化维护流程
     - 引导「待进入/待完善信息」完善并提交准入审核
     - 客户端校验（必填、注册资金正数、手机号/邮箱格式、银行三项联动）
     - 待审核变更标记与撤回入口；不展示变更记录入口
     - _需求: 3.1-3.10, 4.1-4.7, 50.4_
 
-  - [ ] 13.2 实现联系人组件（ContactList / ContactFormDialog）
+  - [x] 13.2 实现联系人组件（ContactList / ContactFormDialog）
     - 新增/编辑/删除、设主要联系人、不可删唯一主要联系人
     - _需求: 9.1-9.5_
+    - ✅ `ContactList`（表格 + 设主/编辑/删除/发送邀请事件，主要联系人删除按钮禁用）+ `ContactFormDialog`（新增/编辑表单）。双端复用（供应商端 supplierId=null）。
 
-  - [ ] 13.3 实现证件组件（CertificateUpload / CertificateList）
+  - [x] 13.3 实现证件组件（CertificateUpload / CertificateList）
     - 选择证件类型动态渲染差异化字段、上传、有效期、审核状态展示
     - _需求: 10.1, 10.2, 10.5, 11.6_
+    - ✅ `CertificateUpload`（选证件类型→动态渲染差异化字段、有效期、文件白名单前校验、beforeUpload 阻止自动上传由父统一提交）+ `CertificateList`（类型/文件/有效期/审核状态/到期标注/来源，可选审核操作）。
 
-  - [ ] 13.4 接入首次登录建议改密
+  - [x] 13.4 接入首次登录建议改密
     - 复用模块 01 ChangePasswordDialog，初始密码首登后弹窗建议修改（可跳过）
     - _需求: 4.8_
+    - ✅ SupplierProfileView onMounted：authStore.isFirstLogin → 弹出模块01 `ChangePasswordDialog`（可关闭跳过）。
+
+  - 注：13.1 SupplierProfileView 已完成（基本信息表单+银行多组+联系人+证件一体化、入驻引导、待审核变更标记/撤回、客户端校验）。
 
 - [ ] 14. 前端 - 采购/管理端页面与组件
-  - [ ] 14.1 实现 SupplierListView
+  - [x] 14.1 实现 SupplierListView
     - 列表字段（企业名称、统一社会信用代码、状态、主要联系人、电话、证件到期状态）
     - 名称模糊搜索、状态筛选、证件到期筛选、分页、证件到期标注（SupplierStatusTag / CertExpiryTag）
     - _需求: 8.1-8.6, 12.5_
+    - ✅ 名称模糊 + 状态 + 证件到期三筛选 + 分页；状态/到期标签；点企业名进详情。
 
-  - [ ] 14.2 实现 SupplierCreateView
+  - [x] 14.2 实现 SupplierCreateView
     - 创建表单（企业名称、分类、主要联系人）+「保存」/「保存并发送邀请」
     - _需求: 6.1-6.3_
+    - ✅ 双按钮（sendInvitation 区分），usecase 前置校验（名称/分类/联系人三项+格式）。
 
-  - [ ] 14.3 实现 SupplierDetailView
+  - [x] 14.3 实现 SupplierDetailView
     - 信息 / 联系人 / 证件 / 变更记录 Tab；采购员直接编辑、手动添加证件
     - 状态调整（StatusChangeDialog，含停用风险提示与受影响事项）、发送/重发邀请（InviteDialog）
     - 变更记录时间倒序 + 时间范围筛选
     - _需求: 7.7-7.12, 9.6-9.8, 10.9, 49, 50.1-50.3_
+    - ✅ 四 Tab；信息即时保存（PUT /api/suppliers/{id}）；联系人含发送邀请；证件手动添加 + 证件审核通过/驳回（10.7/10.8 就近落在证件 Tab）；变更记录时间范围筛选 + ChangeDiffView 对比弹窗；StatusChangeDialog（停用拉取 disable-impact 风险）+ InviteDialog。
 
-  - [ ] 14.4 实现 ChangeReviewView（审核中心）
+  - [x] 14.4 实现 ChangeReviewView（审核中心）
     - 待审核变更列表、前后对比（ChangeDiffView）、通过/驳回（驳回填原因）
     - 证件审核通过/驳回
     - _需求: 5.1-5.7, 10.7, 10.8_
+    - ✅ 待审核变更列表（超24h 标记）→ 审核弹窗内 ChangeDiffView + 通过/驳回（驳回校验原因）。证件审核就近置于供应商详情证件 Tab（同一组 usecase）。
 
-  - [ ] 14.5 实现 CertTypeManagementView（管理端）
+  - [x] 14.5 实现 CertTypeManagementView（管理端）
     - 证件类型增删改/停用、名称唯一校验、差异化字段维护
     - _需求: 11.1-11.5_
+    - ✅ 列表 + 新增/编辑（名称必填，唯一由后端权威）+ 启用/停用 + 差异化字段维护弹窗（整体替换，字段标识/显示名/类型/必填）。
 
-- [ ] 15. 前端 - 路由与权限守卫
-  - [ ] 15.1 实现 supplier.routes.ts
+- [x] 15. 前端 - 路由与权限守卫
+  - [x] 15.1 实现 supplier.routes.ts
     - 供应商端（SUPPLIER）、采购端（BUYER/ADMIN）、管理端（ADMIN）路由与角色守卫
     - 供应商端默认进入企业信息页，无工作台首页
     - _需求: 4.1, 2.8, 2.12_
+    - ✅ `supplier.routes.ts` 导出主布局子路由（含 meta.roles，由模块01 createAuthGuard 统一守卫）；`router/index.ts` 移除模块02 占位路由、spread `...supplierRoutes`（供应商端 /company-info 为默认入口）。
 
-  - [ ] 15.2 配置角色菜单
+  - [x] 15.2 配置角色菜单
     - 在 `frontend/src/config/menu.ts` 按角色加入供应商管理 / 审核中心 / 证件类型字典入口
     - _需求: 2.8, 2.12_
+    - ✅ ADMIN/BUYER 增「供应商审核」(/supplier-changes)；ADMIN 数据设置子菜单增「证件类型字典」(/admin/cert-types)；供应商端沿用 /company-info、/contacts（与路由同步）。
 
-- [ ] 16. 检查点 - 前端完成
-  - 确保所有测试通过，如有疑问请向用户确认。
+- [x] 16. 检查点 - 前端完成
+  - ✅ `npm run build`（vue-tsc -b + vite build）**通过，EXIT=0**（仅 ant-design-vue vendor chunk >500kB 的既有体积告警，非错误）。Phase 11-15 全部完成。
 
 - [ ] 17. 集成与端到端验证
   - [ ] 17.1 实现共享常量与异常处理

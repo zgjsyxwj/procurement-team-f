@@ -46,4 +46,9 @@ public class SupplierChangeQueryHandler {
     public List<SupplierChangeRequest> findChangeHistory(Long supplierId) {
         return changeRequestRepository.findBySupplierId(supplierId);
     }
+
+    /** 某供应商当前的待审核变更（供应商端查看/撤回入口，Req 3.6）。 */
+    public List<SupplierChangeRequest> findPendingBySupplier(Long supplierId) {
+        return changeRequestRepository.findPendingBySupplierId(supplierId);
+    }
 }

@@ -16,6 +16,13 @@ public interface SupplierAccountPort {
     String createAccount(Long supplierId, String contactName, String phone, String email);
 
     /**
+     * 解析供应商登录账号（模块 01 用户 ID）所属的供应商企业 ID（只读，供应商门户端数据范围）。
+     *
+     * @return 关联的供应商企业 ID；账号不存在或未关联企业时为空
+     */
+    java.util.Optional<Long> findSupplierIdByUserId(Long userId);
+
+    /**
      * 停用供应商账号，停用后供应商不可登录（Req 7.7、7.11）。
      */
     void disableAccount(Long supplierId);

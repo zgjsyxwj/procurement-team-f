@@ -13,6 +13,7 @@ import com.cdp.ecosaas.procurement.supplier.domain.model.SupplierStatus;
 import com.cdp.ecosaas.procurement.supplier.domain.repository.SupplierCertificateRepository;
 import com.cdp.ecosaas.procurement.supplier.domain.repository.SupplierContactRepository;
 import com.cdp.ecosaas.procurement.supplier.domain.repository.SupplierRepository;
+import com.cdp.ecosaas.procurement.supplier.shared.exception.SupplierNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -56,6 +57,12 @@ public class SupplierQueryHandler {
                 .totalElements(page.getTotalElements()).totalPages(page.getTotalPages()).build();
     }
 
+    /** 供应商详情（含银行信息，Req 8.6）。 */
+    public Supplier getDetail(Long supplierId) {
+        return supplierRepository.findById(supplierId)
+                .orElseThrow(() -> new SupplierNotFoundException(supplierId));
+    }
+
     /** 合作中供应商列表（供模块 04 询报价选择）。 */
     public List<Supplier> findActiveSuppliers() {
         return supplierRepository.findByStatus(SupplierStatus.ACTIVE);
@@ -64,6 +71,11 @@ public class SupplierQueryHandler {
     /** 供应商证件列表（Req 10.5、10）。 */
     public List<SupplierCertificate> listCertificates(Long supplierId) {
         return certificateRepository.findBySupplierId(supplierId);
+    }
+
+    /** 供应商联系人列表（Req 9.2、9.6）。 */
+    public List<SupplierContact> listContacts(Long supplierId) {
+        return contactRepository.findBySupplierId(supplierId);
     }
 
     // ---------- 私有 ----------

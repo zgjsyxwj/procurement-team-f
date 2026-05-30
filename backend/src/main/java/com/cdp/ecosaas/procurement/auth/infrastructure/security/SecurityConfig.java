@@ -32,6 +32,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private static final String ROLE_ADMIN = "ADMIN";
+    private static final String ROLE_BUYER = "BUYER";
+    private static final String ROLE_SUPPLIER = "SUPPLIER";
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthCorsProperties corsProps;
@@ -62,6 +64,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/management/**").permitAll()
                         // Admin-only paths - require ADMIN role
                         .requestMatchers("/api/admin/**").hasRole(ROLE_ADMIN)
+                        // 供应商管理模块（模块02）接口角色门禁
+                        // 采购端：供应商管理 / 变更审核 / 证件审核 —— 限采购员或采购经理
+                        .requestMatchers("/api/suppliers/**").hasAnyRole(ROLE_BUYER, ROLE_ADMIN)
+                        .requestMatchers("/api/supplier-changes/**").hasAnyRole(ROLE_BUYER, ROLE_ADMIN)
+                        .requestMatchers("/api/supplier-certificates/**").hasAnyRole(ROLE_BUYER, ROLE_ADMIN)
+                        // 供应商门户端：本企业信息/联系人/证件 —— 限供应商（登录接口 /api/supplier/auth/login 已在上方放行）
+                        .requestMatchers("/api/supplier/**").hasRole(ROLE_SUPPLIER)
                         // All other /api/** paths require authentication
                         .requestMatchers("/api/**").authenticated()
                         // Any other paths (non-API) are permitted
