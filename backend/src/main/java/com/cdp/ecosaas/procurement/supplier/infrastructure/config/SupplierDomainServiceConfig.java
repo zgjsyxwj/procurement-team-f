@@ -8,6 +8,8 @@ import com.cdp.ecosaas.procurement.supplier.domain.service.SupplierLifecycleServ
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Clock;
+
 /**
  * 供应商领域服务 Spring Bean 注册配置。
  * <p>
@@ -16,6 +18,12 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class SupplierDomainServiceConfig {
+
+    /** 时钟（证件到期标注等时间相关计算的可注入种子，便于测试）。 */
+    @Bean
+    Clock supplierClock() {
+        return Clock.systemDefaultZone();
+    }
 
     @Bean
     SupplierLifecycleService supplierLifecycleService() {

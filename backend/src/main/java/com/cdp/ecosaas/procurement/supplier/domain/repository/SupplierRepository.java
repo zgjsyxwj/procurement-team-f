@@ -5,6 +5,7 @@ import com.cdp.ecosaas.procurement.shared.model.PageResult;
 import com.cdp.ecosaas.procurement.supplier.domain.model.Supplier;
 import com.cdp.ecosaas.procurement.supplier.domain.model.SupplierStatus;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,9 +23,14 @@ public interface SupplierRepository {
     Optional<Supplier> findByCode(String supplierCode);
 
     /**
-     * 分页搜索：按企业名称模糊 + 状态筛选（Req 8.1-8.3、8.5）。参数为 null 时不作为筛选条件。
+     * 分页搜索：按企业名称模糊 + 状态筛选 + 数据范围限定（Req 8.1-8.3、8.5、50.5）。
+     *
+     * @param nameKeyword          名称模糊关键字，null/空白不筛选
+     * @param status               状态筛选，null 不筛选
+     * @param accessibleSupplierIds 可见供应商 ID 范围，{@code null} 表示不受限（ADMIN）；非空集合按其限定
      */
-    PageResult<Supplier> search(String nameKeyword, SupplierStatus status, PageQuery pageQuery);
+    PageResult<Supplier> search(String nameKeyword, SupplierStatus status,
+                                Collection<Long> accessibleSupplierIds, PageQuery pageQuery);
 
     /**
      * 按状态查询（供模块 04 获取「合作中」供应商列表）。

@@ -1,7 +1,9 @@
 package com.cdp.ecosaas.procurement.supplier.application.handler;
 
 import com.cdp.ecosaas.procurement.shared.exception.BusinessException;
+import com.cdp.ecosaas.procurement.supplier.application.command.ChangeSupplierStatusCommand;
 import com.cdp.ecosaas.procurement.supplier.application.command.CreateSupplierCommand;
+import com.cdp.ecosaas.procurement.supplier.application.result.DisableImpactResult;
 import com.cdp.ecosaas.procurement.supplier.domain.model.Supplier;
 import com.cdp.ecosaas.procurement.supplier.domain.model.SupplierCategory;
 import com.cdp.ecosaas.procurement.supplier.domain.model.SupplierContact;
@@ -15,12 +17,18 @@ import com.cdp.ecosaas.procurement.supplier.domain.repository.SupplierInvitation
 import com.cdp.ecosaas.procurement.supplier.domain.repository.SupplierRepository;
 import com.cdp.ecosaas.procurement.supplier.domain.service.SupplierCodeGenerator;
 import com.cdp.ecosaas.procurement.supplier.domain.service.SupplierLifecycleService;
+import com.cdp.ecosaas.procurement.supplier.shared.exception.InvalidSupplierStatusException;
+import com.cdp.ecosaas.procurement.supplier.shared.exception.SupplierNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -128,5 +136,99 @@ class SupplierCommandHandlerTests {
         assertThrows(BusinessException.class, () -> handler.handleCreateSupplier(cmd, OPERATOR_ID));
 
         verify(supplierRepository, never()).save(any());
+    }
+
+    // ---------- 8.4 状态管理（Req 7.7-7.12） ----------
+
+    private Supplier supplierWithStatus(Long id, SupplierStatus status) {
+        return Supplier.builder().id(id).supplierCode("VD0001").name("测试供应商")
+                .category(SupplierCategory.DOMESTIC).status(status).build();
+    }
+
+    @Test
+    @DisplayName("停用合作中供应商：流转为已停用、同步停用模块01账号、保存")
+    void shouldDisableActiveSupplierAndDisableAccount() {
+        when(supplierRepository.findById(1L)).thenReturn(Optional.of(supplierWithStatus(1L, SupplierStatus.ACTIVE)));
+        when(supplierRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        handler.handleChangeStatus(new ChangeSupplierStatusCommand(1L, SupplierStatus.DISABLED, "停止合作"), OPERATOR_ID, "采购员A");
+
+        ArgumentCaptor<Supplier> captor = ArgumentCaptor.forClass(Supplier.class);
+        verify(supplierRepository).save(captor.capture());
+        assertEquals(SupplierStatus.DISABLED, captor.getValue().getStatus());
+        verify(accountPort).disableAccount(1L);
+        verify(accountPort, never()).enableAccount(any());
+    }
+
+    @Test
+    @DisplayName("重新启用已停用供应商：流转为合作中、同步启用模块01账号")
+    void shouldEnableDisabledSupplierAndEnableAccount() {
+        when(supplierRepository.findById(1L)).thenReturn(Optional.of(supplierWithStatus(1L, SupplierStatus.DISABLED)));
+        when(supplierRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        handler.handleChangeStatus(new ChangeSupplierStatusCommand(1L, SupplierStatus.ACTIVE, "恢复合作"), OPERATOR_ID, "采购员A");
+
+        ArgumentCaptor<Supplier> captor = ArgumentCaptor.forClass(Supplier.class);
+        verify(supplierRepository).save(captor.capture());
+        assertEquals(SupplierStatus.ACTIVE, captor.getValue().getStatus());
+        verify(accountPort).enableAccount(1L);
+        verify(accountPort, never()).disableAccount(any());
+    }
+
+    @Test
+    @DisplayName("手动将待审核信息供应商设为合作中：流转为合作中、不触碰账号")
+    void shouldActivatePendingReviewSupplierWithoutTouchingAccount() {
+        when(supplierRepository.findById(1L)).thenReturn(Optional.of(supplierWithStatus(1L, SupplierStatus.PENDING_REVIEW)));
+        when(supplierRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        handler.handleChangeStatus(new ChangeSupplierStatusCommand(1L, SupplierStatus.ACTIVE, "直接设为合作中"), OPERATOR_ID, "采购员A");
+
+        ArgumentCaptor<Supplier> captor = ArgumentCaptor.forClass(Supplier.class);
+        verify(supplierRepository).save(captor.capture());
+        assertEquals(SupplierStatus.ACTIVE, captor.getValue().getStatus());
+        verifyNoInteractions(accountPort);
+    }
+
+    @Test
+    @DisplayName("非法目标状态（如设为创建成功）应拒绝且不保存")
+    void shouldRejectUnsupportedTargetStatus() {
+        when(supplierRepository.findById(1L)).thenReturn(Optional.of(supplierWithStatus(1L, SupplierStatus.ACTIVE)));
+
+        assertThrows(BusinessException.class, () -> handler.handleChangeStatus(
+                new ChangeSupplierStatusCommand(1L, SupplierStatus.CREATED, "乱填"), OPERATOR_ID, "采购员A"));
+
+        verify(supplierRepository, never()).save(any());
+        verifyNoInteractions(accountPort);
+    }
+
+    @Test
+    @DisplayName("从创建成功直接设为合作中是非法流转，应拒绝")
+    void shouldRejectActivateFromCreated() {
+        when(supplierRepository.findById(1L)).thenReturn(Optional.of(supplierWithStatus(1L, SupplierStatus.CREATED)));
+
+        assertThrows(InvalidSupplierStatusException.class, () -> handler.handleChangeStatus(
+                new ChangeSupplierStatusCommand(1L, SupplierStatus.ACTIVE, "跳级"), OPERATOR_ID, "采购员A"));
+
+        verify(supplierRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("供应商不存在时调整状态应抛 SupplierNotFoundException")
+    void shouldThrowWhenSupplierNotFoundOnChangeStatus() {
+        when(supplierRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(SupplierNotFoundException.class, () -> handler.handleChangeStatus(
+                new ChangeSupplierStatusCommand(99L, SupplierStatus.DISABLED, "x"), OPERATOR_ID, "采购员A"));
+    }
+
+    @Test
+    @DisplayName("停用影响清单：依赖模块未实现，返回空清单桩")
+    void shouldReturnEmptyDisableImpactStub() {
+        when(supplierRepository.findById(1L)).thenReturn(Optional.of(supplierWithStatus(1L, SupplierStatus.ACTIVE)));
+
+        DisableImpactResult impact = handler.getDisableImpact(1L);
+
+        assertFalse(impact.hasImpact());
+        assertTrue(impact.affectedItems().isEmpty());
     }
 }

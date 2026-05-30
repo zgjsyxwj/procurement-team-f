@@ -1,11 +1,14 @@
 package com.cdp.ecosaas.procurement.supplier.application.handler;
 
 import com.cdp.ecosaas.procurement.shared.exception.BusinessException;
+import com.cdp.ecosaas.procurement.supplier.application.command.ChangeSupplierStatusCommand;
 import com.cdp.ecosaas.procurement.supplier.application.command.CreateSupplierCommand;
+import com.cdp.ecosaas.procurement.supplier.application.result.DisableImpactResult;
 import com.cdp.ecosaas.procurement.supplier.domain.model.Supplier;
 import com.cdp.ecosaas.procurement.supplier.domain.model.SupplierContact;
 import com.cdp.ecosaas.procurement.supplier.domain.model.SupplierInvitationLog;
 import com.cdp.ecosaas.procurement.supplier.domain.model.SupplierStatus;
+import com.cdp.ecosaas.procurement.supplier.shared.exception.SupplierNotFoundException;
 import com.cdp.ecosaas.procurement.supplier.domain.port.BuyerSupplierRelationPort;
 import com.cdp.ecosaas.procurement.supplier.domain.port.EmailPort;
 import com.cdp.ecosaas.procurement.supplier.domain.port.SupplierAccountPort;
@@ -116,6 +119,49 @@ public class SupplierCommandHandler {
             lifecycleService.invite(supplier);   // 创建成功 → 待进入
             supplierRepository.save(supplier);
         }
+    }
+
+    /**
+     * 调整供应商状态（Req 7.7-7.11）—— 直接设为「合作中」或「已停用」，无需额外审批。
+     * <p>
+     * 路由：目标=已停用 → 停用并同步停用账号；目标=合作中 → 已停用则重新启用（同步启用账号），
+     * 待完善/待审核信息则手动设为合作中（不动账号）。非法目标或非法流转抛异常，账号联动失败延后至 17.2。
+     */
+    @Transactional
+    public void handleChangeStatus(ChangeSupplierStatusCommand cmd, Long operatorId, String operatorName) {
+        Supplier supplier = supplierRepository.findById(cmd.supplierId())
+                .orElseThrow(() -> new SupplierNotFoundException(cmd.supplierId()));
+        SupplierStatus before = supplier.getStatus();
+
+        switch (cmd.targetStatus()) {
+            case DISABLED -> lifecycleService.disable(supplier, accountPort);
+            case ACTIVE -> {
+                if (before == SupplierStatus.DISABLED) {
+                    lifecycleService.enable(supplier, accountPort);
+                } else {
+                    lifecycleService.activate(supplier);
+                }
+            }
+            default -> throw new BusinessException(
+                    "不支持将供应商状态调整为[" + cmd.targetStatus().getDescription() + "]");
+        }
+        supplierRepository.save(supplier);
+
+        // Req 7.10：记录操作人/时间/前后状态/备注——按决策落库延后，当前仅记日志。
+        log.info("供应商状态调整 supplierId={} {}→{} operator={}({}) remark={}",
+                supplier.getId(), before.getDescription(), supplier.getStatus().getDescription(),
+                operatorName, operatorId, cmd.remark());
+    }
+
+    /**
+     * 停用前受影响事项清单（Req 7.12）。
+     * <p>
+     * 依赖未完成 RFQ/合同/签署/履约——相关模块尚未实现，当前返回空清单桩（待 8.8 + 对应模块就绪后填充）。
+     */
+    public DisableImpactResult getDisableImpact(Long supplierId) {
+        supplierRepository.findById(supplierId)
+                .orElseThrow(() -> new SupplierNotFoundException(supplierId));
+        return DisableImpactResult.none();
     }
 
     private void validateContactFormat(String phone, String email) {

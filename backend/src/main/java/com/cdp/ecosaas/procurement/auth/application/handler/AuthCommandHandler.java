@@ -21,7 +21,9 @@ import com.cdp.ecosaas.procurement.auth.shared.enums.AuditEventType;
 import com.cdp.ecosaas.procurement.auth.shared.exception.AccountLockedException;
 import com.cdp.ecosaas.procurement.auth.shared.exception.AuthErrorCode;
 import com.cdp.ecosaas.procurement.auth.shared.exception.AuthenticationException;
+import com.cdp.ecosaas.procurement.shared.event.SupplierFirstLoginEvent;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +45,7 @@ public class AuthCommandHandler {
     private final LockoutDomainService lockoutDomainService;
     private final AuditLogService auditLogService;
     private final PasswordEncoderPort passwordEncoder;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 处理手机号密码登录。
@@ -262,7 +265,8 @@ public class AuthCommandHandler {
             throw new AuthenticationException(AuthErrorCode.ACCOUNT_DISABLED, "账号已停用，请联系管理员");
         }
 
-        // 4. 验证密码
+        // 4. 验证密码（authenticate 成功会将 isFirstLogin 翻转为 false，故先捕获）
+        boolean wasFirstLogin = user.isFirstLogin();
         boolean authenticated = user.authenticate(cmd.password(), passwordEncoder, lockoutDomainService.policy());
         if (!authenticated) {
             // 保存用户（持久化 failedAttempts 变更）
@@ -289,6 +293,11 @@ public class AuthCommandHandler {
 
         // 5. 登录成功：保存用户（重置 failedAttempts）
         supplierUserRepository.save(user);
+
+        // 5.1 首次登录：发布事件，供模块 02 将供应商流转为「待完善信息」（Req 7.3）
+        if (wasFirstLogin && user.getSupplierId() != null) {
+            eventPublisher.publishEvent(new SupplierFirstLoginEvent(user.getSupplierId()));
+        }
 
         // 6. 生成 Token
         String token = tokenPort.generateToken(

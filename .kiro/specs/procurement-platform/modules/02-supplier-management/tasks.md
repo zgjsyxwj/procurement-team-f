@@ -181,35 +181,45 @@
     - _需求: 3.3, 3.6, 3.7, 5.3, 5.4, 49.2_
     - ✅ 由 `SupplierChangeCommandHandlerTests`（8 用例）覆盖（随 8.2 一并完成）。
 
-  - [ ] 8.4 实现供应商状态管理 Command 与 Handler
+  - [x] 8.4 实现供应商状态管理 Command 与 Handler
     - `ChangeSupplierStatusCommand`：状态机流转 + 同步账号停用/启用 + 记录操作备注
     - 停用前受影响事项查询（未完成 RFQ/合同/签署/履约）与风险提示
     - _需求: 7.7-7.12_
+    - ✅ 已 TDD（7 用例，并入 `SupplierCommandHandlerTests`）：`handleChangeStatus` 路由——目标=已停用→`disable`(同步停用账号)；目标=合作中→已停用走 `enable`(同步启用账号)/待完善·待审核走 `activate`(不动账号)；非法目标(如设为创建成功)抛 `BusinessException`、非法流转(创建成功→合作中)抛 `InvalidSupplierStatusException`；供应商不存在抛 `SupplierNotFoundException`。`getDisableImpact` 返回空清单桩(`DisableImpactResult.none()`)。
+    - ⏸ Req 7.10 操作记录按决策**仅记日志、落库延后**（17.x）；Req 7.12 受影响事项依赖 RFQ/合同/签署/履约模块（未实现），空清单占位，待 8.8 + 相关模块就绪后填充。账号联动真实接通延后 17.2。
 
-  - [ ] 8.5 实现联系人 Command 与 Handler
+  - [x] 8.5 实现联系人 Command 与 Handler
     - `SaveContactCommand`、`DeleteContactCommand`、`SetPrimaryContactCommand`、`InviteContactCommand`
     - `ContactCommandHandler`：主要联系人约束、采购员编辑即时生效、邀请记录
     - _需求: 9.1-9.10_
+    - ✅ 核心已 TDD（7 用例 `ContactCommandHandlerTests`）：`handleSave`（新增/编辑即时生效，设主时走 `ContactDomainService.setPrimary` 自动取消原主要联系人）、`handleSetPrimary`、`handleDelete`（`ensureCanDelete` 拦截删唯一主要联系人）；手机号/邮箱格式校验。
+    - ⏸ 按决策跳过：`InviteContactCommand`（邮件+邀请日志，依赖模块01凭证/重置，延后17.2）；联系人操作审计字段 created_by/updated_by（Req 9.9）。
 
-  - [ ] 8.6 实现证件 Command 与 Handler
+  - [x] 8.6 实现证件 Command 与 Handler
     - `UploadCertificateCommand`（供应商上传→待审核）、`ReviewCertificateCommand`（通过/驳回）、`BuyerAddCertificateCommand`（采购员手动添加→已通过）
     - `CertificateCommandHandler`：OSS 上传、动态字段、当前有效/历史版本
     - _需求: 10.1-10.11_
+    - ✅ 已 TDD（7 用例 `CertificateCommandHandlerTests`）：`handleUpload`（`FileStoragePort` 上传→待审核·SUPPLIER_UPLOAD·当前有效，上传前 `validateValidityPeriod` 拦截无效日期，同类原当前有效版本置历史）、`handleReview`（通过/驳回+原因）、`handleBuyerAdd`（直接 APPROVED·BUYER_MAINTAIN，`updateCurrentValid` 控制更新当前有效 vs 新增历史版本，Req 10.11）。`extraFields` 透传差异化字段值。
+    - ⏸ 按决策跳过：证件驳回通知供应商邮件（Req 10.8）；真实 COS 上传（单测 mock，延后）。
 
-  - [ ] 8.7 实现证件类型字典 Command 与 Handler
+  - [x] 8.7 实现证件类型字典 Command 与 Handler
     - `SaveCertTypeCommand`、`UpdateCertTypeFieldsCommand`
     - `CertificateTypeCommandHandler`：名称唯一、停用保留历史、差异化字段维护
     - _需求: 11.1-11.5_
+    - ✅ 已 TDD（7 用例 `CertificateTypeCommandHandlerTests`）：`handleSave`（新增名称唯一校验、编辑仅改名时校验、保留状态与字段）、`handleUpdateFields`（整体替换差异化字段，Req 11.5）、`handleChangeStatus`（启用/停用，停用保留历史，Req 11.4）。补充 `ChangeCertTypeStatusCommand`（design 命令清单外，承载 PATCH .../status）。
 
-  - [ ] 8.8 实现查询与数据范围服务
+  - [x] 8.8 实现查询与数据范围服务
     - `SupplierListQuery`、`ChangeHistoryQuery`、`PendingChangeQuery`、`CertificateListQuery`
     - `SupplierQueryHandler` / `SupplierChangeQueryHandler`：列表分页/搜索/筛选+证件到期标注、变更记录、合作中供应商
     - `SupplierAccessService`：按角色与管理关系过滤数据范围（ADMIN 全量 / BUYER 管理范围 / SUPPLIER 本企业）
     - _需求: 2.12, 8, 50.1, 50.4, 50.5_
+    - ✅ 已 TDD（3+4+4=11 用例）：`SupplierAccessService`（ADMIN 不受限/BUYER 走 `findSupplierIdsByBuyer`/其他空）；`SupplierQueryHandler.search`（数据范围分页 + 主要联系人 + 证件到期标注取最严重者，注入 `Clock` 可测）、`findActiveSuppliers`（模块04）、`listCertificates`；`SupplierChangeQueryHandler`（待审核列表按范围裁剪、详情、变更历史）。`SupplierRepository.search` 增 `accessibleSupplierIds` 数据范围参数 + 新增 `Clock` Bean。
+    - ⏸ 简化/延后：薄查询记录 `ChangeHistoryQuery`/`PendingChangeQuery`/`CertificateListQuery` 折叠为 handler 方法参数；证件到期状态筛选（Req 8.4 筛选）与变更历史时间范围筛选（Req 50.3）暂未实现（标注/倒序已具备）；SUPPLIER 本企业范围由各接口按 supplierId 直接限定（依赖模块01 user→supplierId 解析，17.2）。
 
-  - [ ] 8.9 实现首次登录事件监听
+  - [x] 8.9 实现首次登录事件监听
     - `SupplierFirstLoginListener`：监听模块 01 首登事件，将「待进入/创建成功」流转为「待完善信息」
     - _需求: 7.3_
+    - ✅ 用户拍板方案 A：新增跨模块契约事件 `shared/event/SupplierFirstLoginEvent(supplierId)`；模块 01 `AuthCommandHandler.handleSupplierLogin` 首登成功（authenticate 前捕获 `isFirstLogin`）后 `eventPublisher.publishEvent(...)`（additive，注入 `ApplicationEventPublisher`）；模块 02 `SupplierFirstLoginListener`（`@EventListener`+`@Transactional`，与登录同源事务）走 `lifecycleService.markFirstLogin` → 待完善信息，供应商缺失/已越过状态时安全跳过。已 TDD（监听器 3 用例 + 模块01 发事件 2 用例）。
 
 - [ ] 9. 接口层 - REST Controller
   - [ ] 9.1 实现 DTO
@@ -249,8 +259,8 @@
     - 测试创建/邀请、变更提交与审核、证件上传与审核、状态调整、权限与数据范围隔离
     - _需求: 5, 6, 7, 8, 10, 50_
 
-- [ ] 10. 检查点 - 后端完成
-  - 确保所有测试通过，如有疑问请向用户确认。
+- [x] 10. 检查点 - 后端应用层（Phase 8）完成
+  - ✅ `mvn clean test` **186 全绿**（Phase 8 应用层 8.1-8.9 全部完成）。Phase 9（REST Controller + DTO）尚未开始。
 
 - [ ] 11. 前端 - 基础设施与状态管理
   - [ ] 11.1 实现前端类型定义

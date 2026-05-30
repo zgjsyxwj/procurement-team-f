@@ -86,7 +86,8 @@ public class JpaSupplierRepository implements SupplierRepository {
     }
 
     @Override
-    public PageResult<Supplier> search(String nameKeyword, SupplierStatus status, PageQuery pageQuery) {
+    public PageResult<Supplier> search(String nameKeyword, SupplierStatus status,
+                                       java.util.Collection<Long> accessibleSupplierIds, PageQuery pageQuery) {
         Specification<SupplierEntity> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (nameKeyword != null && !nameKeyword.isBlank()) {
@@ -94,6 +95,10 @@ public class JpaSupplierRepository implements SupplierRepository {
             }
             if (status != null) {
                 predicates.add(cb.equal(root.get("status"), status.name()));
+            }
+            // accessibleSupplierIds == null 表示不受限（ADMIN）；非 null 时按数据范围限定
+            if (accessibleSupplierIds != null) {
+                predicates.add(root.get("id").in(accessibleSupplierIds));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
