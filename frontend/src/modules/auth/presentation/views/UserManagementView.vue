@@ -17,7 +17,7 @@
           style="width: 150px"
           @change="handleSearch"
         >
-          <a-select-option value="ADMIN">管理员</a-select-option>
+          <a-select-option value="ADMIN">采购经理</a-select-option>
           <a-select-option value="BUYER">采购员</a-select-option>
           <a-select-option value="BUSINESS_USER">业务人员</a-select-option>
         </a-select>
@@ -110,7 +110,7 @@
         </a-form-item>
         <a-form-item label="角色" required>
           <a-select v-model:value="createForm.role" placeholder="请选择角色">
-            <a-select-option value="ADMIN">管理员</a-select-option>
+            <a-select-option value="ADMIN">采购经理</a-select-option>
             <a-select-option value="BUYER">采购员</a-select-option>
             <a-select-option value="BUSINESS_USER">业务人员</a-select-option>
           </a-select>
@@ -128,7 +128,7 @@
       <a-form layout="vertical">
         <a-form-item label="新角色">
           <a-select v-model:value="newRole" placeholder="请选择新角色">
-            <a-select-option value="ADMIN">管理员</a-select-option>
+            <a-select-option value="ADMIN">采购经理</a-select-option>
             <a-select-option value="BUYER">采购员</a-select-option>
             <a-select-option value="BUSINESS_USER">业务人员</a-select-option>
           </a-select>
@@ -318,7 +318,7 @@ function handleUnlock(record: UserListItem) {
 
 function getRoleLabel(role: string): string {
   const map: Record<string, string> = {
-    ADMIN: '管理员',
+    ADMIN: '采购经理',
     BUYER: '采购员',
     BUSINESS_USER: '业务人员',
   };
