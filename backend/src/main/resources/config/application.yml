@@ -130,3 +130,27 @@ auth:
         enabled: false
         connection-timeout: 5s
         read-timeout: 5s
+
+# ===================================================================
+# Supplier module configuration (模块02 供应商管理)
+# 对象存储用腾讯云 COS；证件到期提醒定时任务；邮件复用 spring.mail.* / auth.mail。
+# 连接值由 Apollo 已发布的 tencent.oss.* 提供；密钥(access-key-*)禁止提交真值，仅占位，由 Apollo / K8s Secret 覆盖。
+# ===================================================================
+tencent:
+    oss:
+        endpoint: "https://cos.ap-shanghai.myqcloud.com"
+        cos-region: "ap-shanghai"
+        bucket: "PLACEHOLDER-OVERRIDE-IN-ENV-CONFIG"
+        access-key-id: "PLACEHOLDER-OVERRIDE-IN-ENV-CONFIG"
+        access-key-secret: "PLACEHOLDER-OVERRIDE-IN-ENV-CONFIG"
+        # 证件下载预签名地址有效期(分钟)
+        expire-minutes: 7200
+        # 证件附件上传白名单（Req 10.6）：仅 PDF/JPG/PNG，单文件 ≤100MB
+        max-file-size: 100MB
+        allowed-extensions: [pdf, jpg, jpeg, png]
+        allowed-content-types: [application/pdf, image/jpeg, image/png]
+
+supplier:
+    cert-expiry:
+        # 证件到期提醒每日执行时间（Req 12.1）。默认每日 02:00。
+        cron: "0 0 2 * * ?"
