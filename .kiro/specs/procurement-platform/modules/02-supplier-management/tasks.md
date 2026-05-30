@@ -128,28 +128,33 @@
     - _需求: 3.6, 5.1, 5.8, 8.1-8.5, 50.2, 50.3_
 
 - [ ] 6. 基础设施层 - 外部适配器与定时任务
-  - [ ] 6.1 实现 OssFileStorageAdapter（FileStoragePort）
+  - [x] 6.1 实现 OssFileStorageAdapter（FileStoragePort）
     - 实现证件文件上传至 OSS、生成下载访问地址
     - 文件格式与大小白名单校验
     - _需求: 10.3, 10.6_
+    - ✅ 本轮范围：白名单校验（格式/大小，Req 10.6）已实现并 TDD（7 用例）；腾讯 COS 上传/下载客户端留空（抛 UnsupportedOperationException），未加 cos_api SDK，待真实接入补齐。
 
-  - [ ] 6.2 实现 SupplierAccountAdapter 与 BuyerSupplierRelationAdapter
+  - [x] 6.2 实现 SupplierAccountAdapter 与 BuyerSupplierRelationAdapter
     - `SupplierAccountAdapter`：调用模块 01 创建供应商账号（手机号+初始密码）、停用/启用账号
     - `BuyerSupplierRelationAdapter`：建立（source=CREATED）与查询管理关系
     - _需求: 6.2, 6.4, 7.7, 7.11_
+    - ✅ BuyerSupplierRelationAdapter 复用模块 01 `JpaBuyerSupplierRelationRepository` 已实现并 TDD（3 用例）。⏸ SupplierAccountAdapter 仅留空桩（模块 01 无开通服务），账号联动按决策延后至任务 17.2。
 
-  - [ ] 6.3 实现 EmailServiceAdapter（EmailPort）
+  - [x] 6.3 实现 EmailServiceAdapter（EmailPort）
     - 邀请邮件、变更待审核通知、审核通过/驳回通知、证件驳回通知、证件到期提醒
     - _需求: 3.4, 5.4, 6.3, 9.7, 10.8, 12.2, 12.4_
+    - ✅ 决策（2026-05-30）：占位实现——所有发信方法直接成功返回（仅记日志、不接真实 SMTP），不抛异常、不阻塞上层流程；待接真实邮件时参照模块 01 EmailServiceAdapter 补齐。
 
   - [ ] 6.4 实现证件到期提醒定时任务
     - `CertificateExpiryScheduler`（@Scheduled 每日触发）+ `CertificateExpiryJob`
     - 扫描已通过且当前有效证件，命中提醒节点发送邮件，按 `supplier_cert_reminder_log` 去重
     - _需求: 12.1, 12.2, 12.3, 12.4_
+    - ⏸ 邮件已决策为占位成功返回；6.4/6.5 是否现在做待用户确认（命中/去重核心逻辑已在 `CertExpiryDomainService` 实现并测试）。
 
   - [ ] 6.5* 编写到期提醒任务测试
     - 测试节点命中、去重、收件人（供应商+关联采购员）
     - _需求: 12.2, 12.3_
+    - ⏸ 随 6.4 一并暂缓。
 
 - [ ] 7. 检查点 - 基础设施层完成
   - 确保所有测试通过，如有疑问请向用户确认。
