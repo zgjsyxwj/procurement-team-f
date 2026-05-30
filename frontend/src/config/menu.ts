@@ -48,6 +48,11 @@ const adminMenu: MenuItem[] = [
     icon: h(DashboardOutlined),
   },
   {
+    key: '/suppliers',
+    label: '供应商管理',
+    icon: h(TeamOutlined),
+  },
+  {
     key: '/approval',
     label: '审批中心',
     icon: h(CheckCircleOutlined),
@@ -79,13 +84,13 @@ const adminMenu: MenuItem[] = [
   },
   {
     key: '/settings',
-    label: '系统管理',
+    label: '数据设置',
     icon: h(SettingOutlined),
     children: [
-      { key: '/admin/users', label: '账号管理' },
-      { key: '/admin/audit-logs', label: '审计日志' },
+      { key: '/admin/users', label: '采购员账号' },
       { key: '/settings/fields', label: '字段设置' },
       { key: '/settings/forms', label: '表单设置' },
+      { key: '/admin/audit-logs', label: '审计日志' },
     ],
   },
   {
@@ -148,7 +153,7 @@ const businessMenu: MenuItem[] = [
   },
   {
     key: '/my-purchase-requests/create',
-    label: '创建采购申请',
+    label: '创建采购申请单',
     icon: h(PlusCircleOutlined),
   },
   {
