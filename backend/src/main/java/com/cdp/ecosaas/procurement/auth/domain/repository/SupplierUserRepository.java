@@ -17,5 +17,7 @@ public interface SupplierUserRepository {
 
     Optional<SupplierUser> findByEmail(String email);
 
+    Optional<SupplierUser> findBySupplierId(Long supplierId);
+
     SupplierUser save(SupplierUser user);
 }

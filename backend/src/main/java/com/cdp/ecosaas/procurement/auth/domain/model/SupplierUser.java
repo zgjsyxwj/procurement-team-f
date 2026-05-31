@@ -117,6 +117,20 @@ public class SupplierUser {
     }
 
     /**
+     * 停用账号，停用后不可登录。
+     */
+    public void disable() {
+        this.status = UserStatus.DISABLED;
+    }
+
+    /**
+     * 启用账号。
+     */
+    public void enable() {
+        this.status = UserStatus.ACTIVE;
+    }
+
+    /**
      * 重置密码（无需验证旧密码）。
      * <p>
      * 用于管理员重置密码或通过重置链接设置新密码的场景。

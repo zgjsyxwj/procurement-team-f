@@ -38,6 +38,11 @@ public class JpaSupplierUserRepository implements SupplierUserRepository {
     }
 
     @Override
+    public Optional<SupplierUser> findBySupplierId(Long supplierId) {
+        return jpaDao.findBySupplierId(supplierId).map(mapper::toDomain);
+    }
+
+    @Override
     public SupplierUser save(SupplierUser user) {
         SupplierUserEntity entity;
         if (user.getId() != null) {

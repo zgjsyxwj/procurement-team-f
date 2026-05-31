@@ -13,4 +13,6 @@ public interface SupplierUserJpaDao extends JpaRepository<SupplierUserEntity, Lo
     Optional<SupplierUserEntity> findByPhone(String phone);
 
     Optional<SupplierUserEntity> findByEmail(String email);
+
+    Optional<SupplierUserEntity> findBySupplierId(Long supplierId);
 }
