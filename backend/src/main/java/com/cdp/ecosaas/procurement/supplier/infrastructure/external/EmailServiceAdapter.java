@@ -15,7 +15,7 @@ import java.time.LocalDate;
  * 复用 {@code spring.mail.*} / {@code auth.mail} 配置补齐。
  */
 @Slf4j
-@Component
+@Component("supplierEmailServiceAdapter")
 public class EmailServiceAdapter implements EmailPort {
 
     @Override
